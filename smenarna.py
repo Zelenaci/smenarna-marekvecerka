@@ -1,7 +1,10 @@
 from os.path import basename, splitext
 import tkinter as tk
-from tkinter import Listbox, Radiobutton, IntVar, StringVar, END
- 
+from tkinter import *
+
+
+# from tkinter import ttk
+
 
 class About(tk.Toplevel):
     def __init__(self, parent):
@@ -14,94 +17,92 @@ class About(tk.Toplevel):
     def close(self):
         self.destroy()
 
+
 class Application(tk.Tk):
     name = basename(splitext(basename(__file__.capitalize()))[0])
     name = "Směnárna"
 
     def __init__(self):
         super().__init__(className=self.name)
+        v1 = tk.IntVar(self)
+        v2 = tk.IntVar(self)
         self.title(self.name)
-        self.bind("<Escape>", self.quit)
-        self.lbl = tk.Label(self, text="Hello World")
+        self.lbl = tk.Label(self, text="Směnárna", borderwidth=14)
         self.lbl.pack()
-        self.btn = tk.Button(self, text="Quit", command=self.quit)
-        self.btn.pack()
-        self.btn2 = tk.Button(self, text="About", command=self.about)
+        
+    
+        self.variable = tk.IntVar(self)
+        self.lbl1 = tk.Label(self, text="Transakce:")
+        self.lbl1.pack(anchor=W)
+        self.radiobutton1 = Radiobutton(self, text="Nákup", variable=self.variable, value=1).pack(anchor=W)
+        self.radiobutton2 = Radiobutton(self, text="Prodej", variable=self.variable, value=2).pack(anchor=W)
+        self.variable.set(1)
+
+        
+        self.lbl2 = tk.Label(self, text="Měna:")
+        self.lbl2.pack(anchor=W)
+        self.listbox = tk.Listbox(self)
+        self.listbox.pack(anchor=W)
+        self.listbox.bind("<ButtonRelease-1>", self.kliknu) 
+
+
+        f = open('listek.txt', 'r')
+        slovnik = {}
+        for line in f:
+            self.listbox.insert(tk.END,line.split()[0])
+            slovnik[line.split()[0]] = (line.split()[1:])
+
+        
+        self.lbl3 = tk.Label(self, text="Kurz:")
+        self.lbl3.pack(anchor=W)
+        self.price = tk.StringVar()
+        self.amount = tk.IntVar()
+        self.amountLbl= tk.Label(self, textvariable= self.amount) 
+        self.amountLbl.pack()
+        self.pricel= tk.Label(self, textvariable= self.price) 
+        self.pricel.pack()
+        
+
+        self.lbl2 = tk.Label(self, text="Výpočet:")
+        self.lbl2.pack(anchor=W)
+        self.entry = tk.Entry(self)
+        self.entry.pack()
+        self.btn2 = tk.Button(self, text="Výpočet", command=self.vypocet)
         self.btn2.pack()
+        self.vysledek = tk.IntVar()
+        self.vysledekl= tk.Label(self, textvariable= self.vysledek)
+        self.vysledekl.pack()
+        
 
-        self.varOperace = StringVar()
-        self.rbtNakup = Radiobutton(
-            self, text="Nákup", variable=self.varOperace, value="nakup"
-        )
-        self.rbtProdej = Radiobutton(
-            self, text="Prodej", variable=self.varOperace, value="prodej"
-        )
-        self.rbtNakup.pack()
-        self.rbtProdej.pack()
-        self.varOperace.set("prodej")
+        
+        self.bind("<Escape>", self.quit)
+        self.btn1 = tk.Button(self, text="Quit", command=self.quit)
+        self.btn1.pack()
 
-        self.lstBx = Listbox(self)
-        self.lstBx.pack()
-        self.lstBx.bind("<ButtonRelease-1>", self.kliknu)
+    
+    def vypocet(self,event=None):  
+        a = int(self.entry.get())
+        b = int(self.amount.get())
+        c = float(self.price.get().replace(",","."))
+        self.vysledekVar = float(a*c/b)
+        self.vysledek.set(self.vysledekVar)
 
-        f = open("listek.txt")
-        self.radky = f.readlines()
-
-        for radek in self.radky:
-            radek = radek.split()
-            self.lstBx.insert(END, radek[0])
-    def cteni():
-        print vstupObsah.get()   # pristup pres tkPromennou
-        print vstup.get()        # pristup pres metodu get instance Entry 
-
-        vstup = Entry(hlavni, textvariable=vstupObsah, width=40, validate="key", 
-                validatecommand=overeni)
-        vstup.pack(side=LEFT)
-        vstup.focus_set()           # aby se dalo hned psát
-        vstup.icursor(END)          # aby byl kurzor na konci
-        vstup.selection_range(0, END)
-  
-        tlacitko = Button(hlavni, text=u"přečti", width=10, command=cteni)
-        tlacitko.pack()
-       
-
+    
     def kliknu(self, event):
-        index = self.lstBx.curselection()[0]
-        print(self.radky[index])
-
-    def about(self):
-        window = About(self)
-        window.grab_set()
-
+        index = self.listbox.curselection()[0]
+        f = open("listek.txt")
+        self.lines = f.readlines()
+        self.amountVar = self.lines[index].split()[1]
+        self.amount.set(self.amountVar)
+        if self.variable.get() == 1: 
+            self.priceVar = self.lines[index].split()[3] 
+        else:
+            self.priceVar = self.lines[index].split()[2] 
+        self.price.set(self.priceVar)
+       
     def quit(self, event=None):
         super().quit()
 
 
-#smenarna = Tk()
-#l = Label(smenarna, text = "Směnárna")
-#l.config(font =("Courier", 14))
-#v = IntVar() 
-#Radiobutton(smenarna, text="Nákup", variable=v, value=1).pack(anchor=W) 
-#Radiobutton(smenarna, text="Prodej", variable=v, value=2).pack(anchor=W) 
-#smenarna.option_add('*Font', 'serif 8') # protože defaultní písmo pod Windows je hrozné
-#listbox = Listbox(smenarna)
-#listbox.pack()
-#listbox.insert(END, u"Měna")
-#for item in ["AUD", "DKK", "EUR", "HDK"]:
-#    listbox.insert(END, item) 
-# specify size of window.
-#smenarna.geometry("200x300")
-# Create an Exit button.
-#b1 = Button(smenarna, text = "Exit",
- #           command = smenarna.destroy)
-#mena = {}
-#mena[0]
-#l.pack()
-#T.pack()
-#b1.pack()
- 
-
-
- 
 app = Application()
 app.mainloop()
